@@ -16,7 +16,7 @@ public class UserSession {
     private Long id;
 
     private String userEmail;
-    private String jwtToken;
+    private String jti;
     private LocalDateTime createdAt;
 
     public UserSession() {

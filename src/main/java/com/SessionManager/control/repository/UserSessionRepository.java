@@ -14,5 +14,5 @@ public interface UserSessionRepository extends JpaRepository<UserSession, Long> 
 
     void deleteByUserEmail(String email);
 
-    Optional<UserSession> findByJwtToken(String jwtToken);
+    Optional<UserSession> findByJti(String jti);
 }

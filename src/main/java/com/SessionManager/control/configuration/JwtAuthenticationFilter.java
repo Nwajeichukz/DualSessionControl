@@ -47,7 +47,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 
         // this is a Check if token is in the session repository (i.e., still valid)
-        if (userSessionRepository.findByJwtToken(jwt).isEmpty()) {
+        if (userSessionRepository.findByJti(jwt).isEmpty()) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid or expired token");
             return;

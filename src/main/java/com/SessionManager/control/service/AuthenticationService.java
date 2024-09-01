@@ -79,10 +79,12 @@ public class AuthenticationService {
 
         var jwtToken = jwtService.generateToken(user);
 
+        String jti = jwtService.getJtiFromToken(jwtToken);
+
         // Create and save a new session
         UserSession newSession = new UserSession();
         newSession.setUserEmail(user.getUsername());
-        newSession.setJwtToken(jwtToken);
+        newSession.setJti(jti);
         userSessionRepository.save(newSession);
 
 
@@ -92,7 +94,9 @@ public class AuthenticationService {
     }
 
     public AppResponse<String> logout(String jwtToken) {
-        Optional<UserSession> session = userSessionRepository.findByJwtToken(jwtToken);
+        String jti = jwtService.getJtiFromToken(jwtToken);
+
+        Optional<UserSession> session = userSessionRepository.findByJti(jti);
 
         if (session.isPresent()) {
             userSessionRepository.deleteById(session.get().getId());
@@ -102,7 +106,4 @@ public class AuthenticationService {
         }
     }
 
-    public void logoutOtherDevices(User user) {
-        userSessionRepository.deleteByUserEmail(user.getEmail());
-    }
 }
