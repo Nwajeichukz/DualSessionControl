@@ -6,6 +6,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.function.Function;
 public class JwtService {
 
     private final String SECRET_KEY = "secret";
+    long expirationTimeInMillis = Duration.ofHours(1).toMillis();  // 1 hour in milliseconds
 
     public String extractUsername(String token){return  extractClaim(token, Claims::getSubject);}
 
@@ -45,7 +47,7 @@ public class JwtService {
 
         return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
                 .setId(jti)
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10))
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeInMillis))
                 .signWith(SignatureAlgorithm.HS256, SECRET_KEY).compact();
     }
 

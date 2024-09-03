@@ -1,11 +1,11 @@
 package com.SessionManager.control.configuration;
 
 
-import com.SessionManager.control.repository.UserSessionRepository;
 import com.SessionManager.control.service.JwtService;
 import com.SessionManager.control.service.MyUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,9 +25,10 @@ import java.io.IOException;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final MyUserDetailsService userDetailsService;
-    private final UserSessionRepository userSessionRepository;
+    private final RedisTemplate<String, String> redisTemplate;
 
 
+    private static final String USER_SESSION_KEY_PREFIX = "user:session:";
     private final JwtService jwtService;
 
     @Override
@@ -45,9 +46,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         jwt = authorizationHeader.substring(7);
         userEmail = jwtService.extractUsername(jwt);
 
+        String jwi = jwtService.getJtiFromToken(jwt);
 
-        // this is a Check if token is in the session repository (i.e., still valid)
-        if (userSessionRepository.findByJti(jwt).isEmpty()) {
+        String redisKey = USER_SESSION_KEY_PREFIX + userEmail;
+
+        // Check if token is still valid
+        Boolean isTokenValid = redisTemplate.opsForSet().isMember(redisKey, jwi);
+
+        if (Boolean.FALSE.equals(isTokenValid)) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("Invalid or expired token");
             return;
@@ -63,7 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 SecurityContextHolder.getContext().setAuthentication(usernamePasswordAuthenticationToken);
             }
         }
-    log.info("authentication:: {}", SecurityContextHolder.getContext().getAuthentication());
+        log.info("authentication:: {}", SecurityContextHolder.getContext().getAuthentication());
         filterChain.doFilter(request, response);
     }
 }
